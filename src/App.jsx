@@ -115,7 +115,7 @@ function App() {
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
       <Typography variant="h4" component="h1" gutterBottom align="center">
-        PDF Com-Biner
+        PDF Com-Binder
       </Typography>
       
       <Paper 
