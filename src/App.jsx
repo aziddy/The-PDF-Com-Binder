@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Box, Container, Typography, Tabs, Tab } from '@mui/material';
 import CombineMode from './components/CombineMode';
 import ExtractMode from './components/ExtractMode';
+import RearrangeMode from './components/RearrangeMode';
 
 function App() {
   const [mode, setMode] = useState('combine');
@@ -16,11 +17,13 @@ function App() {
         <Tabs value={mode} onChange={(_, v) => setMode(v)} centered>
           <Tab label="Combine PDFs" value="combine" />
           <Tab label="Extract Pages" value="extract" />
+          <Tab label="Rearrange PDF" value="rearrange" />
         </Tabs>
       </Box>
 
       {mode === 'combine' && <CombineMode />}
       {mode === 'extract' && <ExtractMode />}
+      {mode === 'rearrange' && <RearrangeMode />}
     </Container>
   );
 }
