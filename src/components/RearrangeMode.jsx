@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { Box, Button, Typography, Paper } from '@mui/material';
-import { PDFDocument } from 'pdf-lib';
+import { PDFDocument, degrees } from 'pdf-lib';
 import * as pdfjsLib from 'pdfjs-dist';
 import {
   DndContext,
@@ -50,7 +50,7 @@ function RearrangeMode() {
       const doc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
       pdfDocRef.current = doc;
       setPageCount(doc.numPages);
-      setPages(Array.from({ length: doc.numPages }, (_, i) => ({ originalIndex: i })));
+      setPages(Array.from({ length: doc.numPages }, (_, i) => ({ originalIndex: i, rotation: 0 })));
     } catch (err) {
       console.error('Error loading PDF:', err);
       setSourceFile(null);
@@ -75,8 +75,14 @@ function RearrangeMode() {
     setPages(prev => prev.filter((_, i) => i !== displayIndex));
   };
 
+  const handleRotate = (displayIndex) => {
+    setPages(prev => prev.map((p, i) =>
+      i === displayIndex ? { ...p, rotation: (p.rotation + 90) % 360 } : p
+    ));
+  };
+
   const resetOrder = () => {
-    setPages(Array.from({ length: pageCount }, (_, i) => ({ originalIndex: i })));
+    setPages(Array.from({ length: pageCount }, (_, i) => ({ originalIndex: i, rotation: 0 })));
   };
 
   const reset = () => {
@@ -90,7 +96,7 @@ function RearrangeMode() {
     setPages([]);
   };
 
-  const isUnchanged = pages.length === pageCount && pages.every((p, i) => p.originalIndex === i);
+  const isUnchanged = pages.length === pageCount && pages.every((p, i) => p.originalIndex === i && p.rotation === 0);
 
   const savePdf = async () => {
     if (pages.length === 0 || !sourceFile) return;
@@ -103,7 +109,12 @@ function RearrangeMode() {
 
       const indices = pages.map(p => p.originalIndex);
       const copiedPages = await newDoc.copyPages(srcDoc, indices);
-      copiedPages.forEach((page) => newDoc.addPage(page));
+      copiedPages.forEach((page, i) => {
+        if (pages[i].rotation !== 0) {
+          page.setRotation(degrees(page.getRotation().angle + pages[i].rotation));
+        }
+        newDoc.addPage(page);
+      });
 
       const pdfBytes = await newDoc.save();
       const blob = new Blob([pdfBytes], { type: 'application/pdf' });
@@ -184,7 +195,9 @@ function RearrangeMode() {
                   pageIndex={page.originalIndex}
                   displayIndex={i}
                   totalPages={pages.length}
+                  rotation={page.rotation}
                   onDelete={() => handleDelete(i)}
+                  onRotate={() => handleRotate(i)}
                 />
               ))}
             </Box>

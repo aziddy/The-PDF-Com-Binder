@@ -2,11 +2,12 @@ import { useEffect, useRef, useState } from 'react';
 import { Box, Chip, IconButton, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
+import RotateRightIcon from '@mui/icons-material/RotateRight';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import PropTypes from 'prop-types';
 
-function RearrangePageThumbnail({ id, pdfDoc, pageIndex, displayIndex, totalPages, onDelete }) {
+function RearrangePageThumbnail({ id, pdfDoc, pageIndex, displayIndex, totalPages, rotation, onDelete, onRotate }) {
   const canvasRef = useRef(null);
   const [rendered, setRendered] = useState(false);
 
@@ -95,6 +96,22 @@ function RearrangePageThumbnail({ id, pdfDoc, pageIndex, displayIndex, totalPage
       )}
       <IconButton
         size="small"
+        onClick={onRotate}
+        onPointerDown={(e) => e.stopPropagation()}
+        sx={{
+          position: 'absolute',
+          top: 2,
+          right: 30,
+          zIndex: 1,
+          backgroundColor: 'rgba(255,255,255,0.85)',
+          '&:hover': { backgroundColor: 'primary.light', color: 'white' },
+          p: '3px',
+        }}
+      >
+        <RotateRightIcon fontSize="small" />
+      </IconButton>
+      <IconButton
+        size="small"
         onClick={onDelete}
         onPointerDown={(e) => e.stopPropagation()}
         sx={{
@@ -109,15 +126,19 @@ function RearrangePageThumbnail({ id, pdfDoc, pageIndex, displayIndex, totalPage
       >
         <CloseIcon fontSize="small" />
       </IconButton>
-      <canvas
-        ref={canvasRef}
-        style={{
-          display: 'block',
-          width: '100%',
-          height: 'auto',
-          opacity: rendered ? 1 : 0.3,
-        }}
-      />
+      <Box sx={{ overflow: 'hidden' }}>
+        <canvas
+          ref={canvasRef}
+          style={{
+            display: 'block',
+            width: '100%',
+            height: 'auto',
+            opacity: rendered ? 1 : 0.3,
+            transform: rotation ? `rotate(${rotation}deg)` : undefined,
+            transition: 'transform 0.2s ease',
+          }}
+        />
+      </Box>
       <Box
         sx={{
           display: 'flex',
@@ -144,7 +165,9 @@ RearrangePageThumbnail.propTypes = {
   pageIndex: PropTypes.number.isRequired,
   displayIndex: PropTypes.number.isRequired,
   totalPages: PropTypes.number.isRequired,
+  rotation: PropTypes.number.isRequired,
   onDelete: PropTypes.func.isRequired,
+  onRotate: PropTypes.func.isRequired,
 };
 
 export default RearrangePageThumbnail;
